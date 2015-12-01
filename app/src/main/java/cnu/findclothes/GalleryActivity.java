@@ -207,6 +207,7 @@ public class GalleryActivity extends FragmentActivity {
                     imageDataPath = imageCursor.getString(imgData);
                 }
             }
+
             imageCursor.close();
             return imageDataPath;
         }
