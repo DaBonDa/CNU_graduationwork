@@ -41,7 +41,6 @@ public class FindActivity extends FragmentActivity  {
        Toast toast_01 = Toast.makeText(this, "검색할 의류를 촬영해주세요", Toast.LENGTH_SHORT);
        toast_01.setGravity(Gravity.CENTER,0,0);
        toast_01.show();
-
     }
 
     @Override
@@ -147,7 +146,7 @@ public class FindActivity extends FragmentActivity  {
 
     private class TCPclient implements Runnable {
 
-        private static final String serverIP = "119.81.252.88"; // 서버 아이피
+        private static final String serverIP = "52.192.106.216"; // 서버 아이피
         private static final int serverPort = 5555; // 접속 포트
 
         private Socket socket = null;

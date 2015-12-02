@@ -236,7 +236,7 @@ public class GalleryActivity extends FragmentActivity {
 
     private class TCPclient implements Runnable {
 
-        private static final String serverIP = "119.81.252.88"; // 서버 아이피
+        private static final String serverIP = "52.192.106.216"; // 서버 아이피
         private static final int serverPort = 5555; // 접속 포트
 
         private Socket socket = null;
