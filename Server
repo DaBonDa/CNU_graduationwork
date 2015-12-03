@@ -1,0 +1,208 @@
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Collections;
+
+import org.opencv.core.*;
+import org.opencv.imgcodecs.*;
+import org.opencv.features2d.*;
+
+public class TCPserver implements Runnable {
+
+   public static final int ServerPort = 5555; // ex: 5555
+      
+   public void run() {
+      
+      try {
+         ServerSocket serverSocket = new ServerSocket(ServerPort);
+      
+         System.out.println("S: Connecting...");
+
+         System.out.println(InetAddress.getLocalHost().getHostAddress());
+
+         while (true) {
+            Socket socket = serverSocket.accept();
+            System.out.println("S: Receiving...");
+                  
+            try {
+               
+               File f = new File("C:\\Users\\Administrator\\Desktop\\photo\\photo.jpg");
+               FileOutputStream output = new FileOutputStream(f);
+               byte[] buf = new byte[2048];
+               int read_length = 0;
+               while((read_length = socket.getInputStream().read(buf)) >= 0) {
+                  output.write(buf,0,read_length);
+                  output.flush();
+               }   
+                              
+               output.close();
+            } catch (Exception e) {
+               System.out.println("S: Error");
+               e.printStackTrace();
+            } finally {
+               //socket.close();
+               String clothesDic = "C:\\Users\\Administrator\\Desktop\\clothes\\";
+               File[] files = (new File(clothesDic)).listFiles();
+               int[] results = new int[files.length];
+               int resultMaxIdx, resultMaxIdx2, resultMaxIdx3 = 0;
+               
+               System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+               Mat img1 = Imgcodecs.imread("C:\\Users\\Administrator\\Desktop\\photo\\photo.jpg", Imgcodecs.CV_LOAD_IMAGE_COLOR);
+               MatOfKeyPoint keypoints1 = new MatOfKeyPoint();
+               Mat descriptors1 = new Mat();
+               FeatureDetector detector = FeatureDetector.create(FeatureDetector.ORB);
+               DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
+               detector.detect(img1, keypoints1);
+               extractor.compute(img1, keypoints1, descriptors1);
+               
+               
+               for(int i=0; i<files.length; i++) {
+                  results[i] = compareFeature(descriptors1,clothesDic+files[i].getName(),i);
+                  
+               }
+               int max=0, max2=0, max3 =0;
+               for(int i=0; i<results.length; i++) {
+                  if(results[i] > max) {
+                     max3 = max2;
+                     resultMaxIdx3 = resultMaxIdx2;
+                     max2 = max;
+                     resultMaxIdx2 = resultMaxIdx;
+                     max = results[i];
+                     resultMaxIdx = i;
+                  }
+                  else if(results[i] > max2) {
+                	  max3 = max2;
+                      resultMaxIdx3 = resultMaxIdx2;
+                      max2 = results[i];
+                      resultMaxIdx2 = i;
+                  }
+                  else if(results[i] > max3) {
+                      max3 = results[i];
+                      resultMaxIdx3 = i;
+                  }
+               }
+               System.out.println("첫번째 : '"+files[resultMaxIdx].getName()+"'    result is : "+results[resultMaxIdx]);
+               System.out.println("두번째 : '"+files[resultMaxIdx2].getName()+"'    result is : "+results[resultMaxIdx2]);
+               System.out.println("세번째 : '"+files[resultMaxIdx3].getName()+"'    result is : "+results[resultMaxIdx3]);
+               System.out.println("완료되었습니다.");
+               
+               //socket = serverSocket.accept();
+               PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+               out.write(clothesDic+files[resultMaxIdx]);
+               DataInputStream dis = new DataInputStream(new FileInputStream(clothesDic+files[resultMaxIdx].getName()));
+               DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+              
+               int len;
+               
+               byte[] buf = new byte[2048];
+               while((len=dis.read(buf)) != -1) {
+                   dos.write(buf,0,len);
+                   dos.flush();
+               }
+               dis.close();
+               PrintWriter out2 = new PrintWriter(socket.getOutputStream(), true);
+               out.write(clothesDic+files[resultMaxIdx2]);
+               DataInputStream diss = new DataInputStream(new FileInputStream(clothesDic+files[resultMaxIdx2].getName()));
+               DataOutputStream doss = new DataOutputStream(socket.getOutputStream());
+              
+               byte[] buf2 = new byte[2048];
+               while((len=diss.read(buf2)) != -1) {
+                   doss.write(buf2,0,len);
+                   doss.flush();
+               }
+               diss.close();
+               PrintWriter out3 = new PrintWriter(socket.getOutputStream(), true);
+               out.write(clothesDic+files[resultMaxIdx3]);
+               DataInputStream disss = new DataInputStream(new FileInputStream(clothesDic+files[resultMaxIdx3].getName()));
+               DataOutputStream dosss = new DataOutputStream(socket.getOutputStream());
+               
+               byte[] buf3 = new byte[2048];
+               while((len=dis.read(buf3)) != -1) {
+                   dosss.write(buf3,0,len);
+                   dosss.flush();
+               }
+               disss.close();
+                    
+               socket.close(); 
+            }
+         }
+      } catch (Exception e) {
+         System.out.println("S: Error");
+         e.printStackTrace();
+      }
+      
+   }
+   
+   public static int compareFeature(Mat descriptors1, String filename2, int outFileCnt) {
+       int retVal = 0;
+       
+       System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+       
+       Mat img2 = Imgcodecs.imread(filename2, Imgcodecs.CV_LOAD_IMAGE_COLOR);
+       Mat outImg = new Mat();
+       MatOfKeyPoint keypoints2 = new MatOfKeyPoint();
+       Mat descriptors2 = new Mat();
+       
+       FeatureDetector detector = FeatureDetector.create(FeatureDetector.ORB);
+       
+       DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
+             
+       detector.detect(img2, keypoints2);
+   
+       extractor.compute(img2, keypoints2, descriptors2);
+       
+       DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
+       
+       MatOfDMatch matches = new MatOfDMatch();      
+       
+       String out_filename = "C:\\Users\\Administrator\\Desktop\\clothes\\output"+outFileCnt+".jpg";
+       
+       if (descriptors2.cols() == descriptors1.cols()) {
+          matcher.match(descriptors1, descriptors2, matches);
+                
+          DMatch[] match = matches.toArray();
+
+          double max_dist = 0; double min_dist = 100;
+          
+          for (int i=0; i<descriptors1.rows(); i++) {
+             double dist = match[i].distance;
+             if( dist < min_dist ) min_dist = dist;
+             if( dist > max_dist ) max_dist = dist;
+          }
+          
+         
+          
+          for (int i=0; i<descriptors1.rows(); i++) {
+             if (match[i].distance <= 60) {             //threshold : 60
+                retVal++;
+             }
+          }
+          System.out.println(filename2 + "  max_dist = "+max_dist+", min_dist = "+min_dist + "    result : "+retVal);
+          
+          //Features2d.drawMatches(img1, keypoints1, img2, keypoints2, matches, outImg, Scalar.all(-1), Scalar.all(-1), new MatOfByte(), Features2d.NOT_DRAW_SINGLE_POINTS);
+          
+          //Imgcodecs.imwrite(out_filename, outImg);
+       }
+      
+       return retVal;
+       
+    }
+
+   public static void main(String[] args) {
+
+
+      Thread desktopServerThread = new Thread(new TCPserver());
+      desktopServerThread.start();
+   }
+}
+   
