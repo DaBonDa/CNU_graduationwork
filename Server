@@ -11,31 +11,28 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Collections;
-
 import org.opencv.core.*;
 import org.opencv.imgcodecs.*;
 import org.opencv.features2d.*;
 
-public class TCPserver implements Runnable {
+public class TCPServer implements Runnable {
 
-   public static final int ServerPort = 5555; // ex: 5555
+   public static final int ServerPort = 55555;
       
    public void run() {
       
       try {
-         ServerSocket serverSocket = new ServerSocket(ServerPort);
+         ServerSocket server = new ServerSocket(ServerPort);
       
          System.out.println("S: Connecting...");
 
          System.out.println(InetAddress.getLocalHost().getHostAddress());
 
          while (true) {
-            Socket socket = serverSocket.accept();
+        	Socket socket = server.accept();    
             System.out.println("S: Receiving...");
-                  
+            
             try {
-               
                File f = new File("C:\\Users\\Administrator\\Desktop\\photo\\photo.jpg");
                FileOutputStream output = new FileOutputStream(f);
                byte[] buf = new byte[2048];
@@ -50,11 +47,11 @@ public class TCPserver implements Runnable {
                System.out.println("S: Error");
                e.printStackTrace();
             } finally {
-               //socket.close();
+               socket.close();
                String clothesDic = "C:\\Users\\Administrator\\Desktop\\clothes\\";
                File[] files = (new File(clothesDic)).listFiles();
                int[] results = new int[files.length];
-               int resultMaxIdx, resultMaxIdx2, resultMaxIdx3 = 0;
+               int resultMaxIdx = 0, resultMaxIdx2 = 0, resultMaxIdx3 = 0;
                
                System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
                Mat img1 = Imgcodecs.imread("C:\\Users\\Administrator\\Desktop\\photo\\photo.jpg", Imgcodecs.CV_LOAD_IMAGE_COLOR);
@@ -91,17 +88,18 @@ public class TCPserver implements Runnable {
                       resultMaxIdx3 = i;
                   }
                }
-               System.out.println("첫번째 : '"+files[resultMaxIdx].getName()+"'    result is : "+results[resultMaxIdx]);
-               System.out.println("두번째 : '"+files[resultMaxIdx2].getName()+"'    result is : "+results[resultMaxIdx2]);
-               System.out.println("세번째 : '"+files[resultMaxIdx3].getName()+"'    result is : "+results[resultMaxIdx3]);
-               System.out.println("완료되었습니다.");
+               System.out.println("1 : '"+files[resultMaxIdx].getName()+"'    result is : "+results[resultMaxIdx]);
+               System.out.println("2 : '"+files[resultMaxIdx2].getName()+"'    result is : "+results[resultMaxIdx2]);
+               System.out.println("3 : '"+files[resultMaxIdx3].getName()+"'    result is : "+results[resultMaxIdx3]);
+               System.out.println("done");
                
-               //socket = serverSocket.accept();
-               PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-               out.write(clothesDic+files[resultMaxIdx]);
+               socket = server.accept();
+               //PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+               //out.write(clothesDic+files[resultMaxIdx]);
                DataInputStream dis = new DataInputStream(new FileInputStream(clothesDic+files[resultMaxIdx].getName()));
                DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
               
+               dos.writeUTF(clothesDic+files[resultMaxIdx]);
                int len;
                
                byte[] buf = new byte[2048];
@@ -110,29 +108,36 @@ public class TCPserver implements Runnable {
                    dos.flush();
                }
                dis.close();
-               PrintWriter out2 = new PrintWriter(socket.getOutputStream(), true);
-               out.write(clothesDic+files[resultMaxIdx2]);
+               dos.close();
+               System.out.println("1 complete");
+               socket = server.accept();
+               //PrintWriter out2 = new PrintWriter(socket.getOutputStream(), true);
+               //out2.write(clothesDic+files[resultMaxIdx2]);
                DataInputStream diss = new DataInputStream(new FileInputStream(clothesDic+files[resultMaxIdx2].getName()));
                DataOutputStream doss = new DataOutputStream(socket.getOutputStream());
-              
+               doss.writeUTF(clothesDic+files[resultMaxIdx2]);
                byte[] buf2 = new byte[2048];
                while((len=diss.read(buf2)) != -1) {
                    doss.write(buf2,0,len);
                    doss.flush();
                }
                diss.close();
-               PrintWriter out3 = new PrintWriter(socket.getOutputStream(), true);
-               out.write(clothesDic+files[resultMaxIdx3]);
+               doss.close();
+               System.out.println("2 complete");
+               socket = server.accept();
+               //PrintWriter out3 = new PrintWriter(socket.getOutputStream(), true);
+               //out.write(clothesDic+files[resultMaxIdx3]);
                DataInputStream disss = new DataInputStream(new FileInputStream(clothesDic+files[resultMaxIdx3].getName()));
                DataOutputStream dosss = new DataOutputStream(socket.getOutputStream());
-               
+               dosss.writeUTF(clothesDic+files[resultMaxIdx3]);
                byte[] buf3 = new byte[2048];
-               while((len=dis.read(buf3)) != -1) {
+               while((len=disss.read(buf3)) != -1) {
                    dosss.write(buf3,0,len);
                    dosss.flush();
                }
                disss.close();
-                    
+               dosss.close();
+               System.out.println("3 complete");     
                socket.close(); 
             }
          }
@@ -179,9 +184,7 @@ public class TCPserver implements Runnable {
              if( dist < min_dist ) min_dist = dist;
              if( dist > max_dist ) max_dist = dist;
           }
-          
-         
-          
+     
           for (int i=0; i<descriptors1.rows(); i++) {
              if (match[i].distance <= 60) {             //threshold : 60
                 retVal++;
@@ -190,18 +193,14 @@ public class TCPserver implements Runnable {
           System.out.println(filename2 + "  max_dist = "+max_dist+", min_dist = "+min_dist + "    result : "+retVal);
           
           //Features2d.drawMatches(img1, keypoints1, img2, keypoints2, matches, outImg, Scalar.all(-1), Scalar.all(-1), new MatOfByte(), Features2d.NOT_DRAW_SINGLE_POINTS);
-          
           //Imgcodecs.imwrite(out_filename, outImg);
        }
-      
-       return retVal;
-       
+      return retVal;
     }
 
    public static void main(String[] args) {
 
-
-      Thread desktopServerThread = new Thread(new TCPserver());
+      Thread desktopServerThread = new Thread(new TCPServer());
       desktopServerThread.start();
    }
 }
