@@ -70,7 +70,9 @@ public class ResultActivity extends FragmentActivity implements OnTouchListener 
         StringTokenizer st1 = new StringTokenizer(name, "_");
         StringTokenizer st2 = new StringTokenizer(name2, "_");
         StringTokenizer st3 = new StringTokenizer(name3, "_");
-
+        st1.nextToken();
+        st2.nextToken();
+        st3.nextToken();
         Bitmap myBitmap1 = BitmapFactory.decodeFile(mediaFile.getPath() + File.separator + "result1.jpg");
         ImageView myImage1 = (ImageView) findViewById(R.id.result1Img);
         myImage1.setImageBitmap(myBitmap1);

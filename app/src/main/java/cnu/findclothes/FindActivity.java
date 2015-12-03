@@ -147,7 +147,7 @@ public class FindActivity extends FragmentActivity  {
     private class TCPclient implements Runnable {
 
         private static final String serverIP = "52.193.28.32"; // 서버 아이피
-        private static final int serverPort = 5555; // 접속 포트
+        private static final int serverPort = 55555; // 접속 포트
 
         private Socket socket = null;
         private String msg;
