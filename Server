@@ -41,7 +41,17 @@ public class TCPServer implements Runnable {
                   output.write(buf,0,read_length);
                   output.flush();
                }   
-                              
+               BufferedImage srcImg = ImageIO.read(f);
+               int srcWidth = srcImg.getWidth();
+               int srcHeight = srcImg.getHeight();       
+             
+               int color = Color.WHITE.getRGB();
+               for( int x = 0; x < srcWidth; x++ ) {
+            	   for( int y = 0; y < srcHeight; y++ ) {
+            		   	if(x < 60 || x > 420 || y < 100|| y > 540)  srcImg.setRGB(x, y, color);
+            	   }
+               }
+               ImageIO.write(srcImg, "JPG", f);               
                output.close();
             } catch (Exception e) {
                System.out.println("S: Error");
@@ -94,8 +104,6 @@ public class TCPServer implements Runnable {
                System.out.println("done");
                
                socket = server.accept();
-               //PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-               //out.write(clothesDic+files[resultMaxIdx]);
                DataInputStream dis = new DataInputStream(new FileInputStream(clothesDic+files[resultMaxIdx].getName()));
                DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
               
@@ -110,9 +118,8 @@ public class TCPServer implements Runnable {
                dis.close();
                dos.close();
                System.out.println("1 complete");
+               
                socket = server.accept();
-               //PrintWriter out2 = new PrintWriter(socket.getOutputStream(), true);
-               //out2.write(clothesDic+files[resultMaxIdx2]);
                DataInputStream diss = new DataInputStream(new FileInputStream(clothesDic+files[resultMaxIdx2].getName()));
                DataOutputStream doss = new DataOutputStream(socket.getOutputStream());
                doss.writeUTF(clothesDic+files[resultMaxIdx2]);
@@ -124,9 +131,8 @@ public class TCPServer implements Runnable {
                diss.close();
                doss.close();
                System.out.println("2 complete");
+               
                socket = server.accept();
-               //PrintWriter out3 = new PrintWriter(socket.getOutputStream(), true);
-               //out.write(clothesDic+files[resultMaxIdx3]);
                DataInputStream disss = new DataInputStream(new FileInputStream(clothesDic+files[resultMaxIdx3].getName()));
                DataOutputStream dosss = new DataOutputStream(socket.getOutputStream());
                dosss.writeUTF(clothesDic+files[resultMaxIdx3]);
